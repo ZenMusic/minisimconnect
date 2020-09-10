@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MiniSimconnect"
         mc:Ignorable="d"
-        Title="MiniSimconnect" Height="216.092" Width="441.673" Loaded="Window_Loaded" Unloaded="Window_Unloaded">
+        Title="not connected" Height="216.092" Width="441.673" Loaded="Window_Loaded" Unloaded="Window_Unloaded">
     <!-- Make sure to have the Loaded / Unloaded events hooked -->
-    <Grid x:Name="mainGrid">
+    <StackPanel>
+        <Grid x:Name="mainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
@@ -21,25 +22,40 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Grid.Column="0" Content="Longitude" VerticalAlignment="Center" FontWeight="Bold" />
-        <Label Grid.Row="1" Grid.Column="0" Content="Latitude" VerticalAlignment="Center" FontWeight="Bold" />
-        <Label Grid.Row="2" Grid.Column="0" Content="Direction" VerticalAlignment="Center" FontWeight="Bold" />
-        <Label Grid.Row="3" Grid.Column="0" Content="Height" VerticalAlignment="Center" FontWeight="Bold" />
+        <Label Grid.Row="0" Grid.Column="0" Content="AutoPilot" VerticalAlignment="Center" FontWeight="Bold" />
+        <Label Grid.Row="1" Grid.Column="0" Content="Approach" VerticalAlignment="Center" FontWeight="Bold" />
+        <Label Grid.Row="2" Grid.Column="0" Content="Parking Brake" VerticalAlignment="Center" FontWeight="Bold" />
+        <Label Grid.Row="3" Grid.Column="0" Content="Throttle" VerticalAlignment="Center" FontWeight="Bold" />
         <Label Grid.Row="4" Grid.Column="0" Content="Speed" VerticalAlignment="Center" FontWeight="Bold" />
-        <Label Grid.Row="5" Grid.Column="0" Content="Status" VerticalAlignment="Center" FontWeight="Bold" />
+        <Label Grid.Row="5" Grid.Column="0" Content="Auto Thrust" VerticalAlignment="Center" FontWeight="Bold" />
 
         <Label Grid.Row="0" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="1" />
         <Label Grid.Row="1" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="2" />
         <Label Grid.Row="2" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="3" />
         <Label Grid.Row="3" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="4" />
         <Label Grid.Row="4" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="5" />
+        <Label Grid.Row="5" Grid.Column="1" Content="0" VerticalAlignment="Center" x:Uid="6" />
 
         <Label Grid.Row="0" Grid.Column="2" Content="-" VerticalAlignment="Center" x:Uid="101" />
         <Label Grid.Row="1" Grid.Column="2" Content="-" VerticalAlignment="Center" x:Uid="102" />
         <Label Grid.Row="2" Grid.Column="2" Content="-" VerticalAlignment="Center" x:Uid="103" />
         <Label Grid.Row="3" Grid.Column="2" Content="-" VerticalAlignment="Center" x:Uid="104" />
         <Label Grid.Row="4" Grid.Column="2" Content="-" VerticalAlignment="Center" x:Uid="105" />
+        <Label Grid.Row="5" Grid.Column="2" Content="Bool" VerticalAlignment="Center" x:Uid="106" />
 
-        <Label Grid.Row="5" Grid.Column="1" Content="Not connected" x:Name="lblStatus" />
     </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+        <Button Margin="10,0,0,10" Grid.Column="0" Content="AT OFF"></Button>
+        <Button Click="btConnect_Clicked" Margin="10,0,0,10" Grid.Column="1" Content="Connect"></Button>
+         <Button Click="btExit_Clicked" Margin="10,0,0,10" Grid.Column="2" Content="Disconnect/Exit"></Button>
+        </Grid>
+    </StackPanel>
+
 </Window>
+
+    

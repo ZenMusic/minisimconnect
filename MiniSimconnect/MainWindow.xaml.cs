@@ -34,13 +34,22 @@ namespace MiniSimconnect
         /// </summary>
         Dictionary<int, string> simConnectProperties = new Dictionary<int, string>
         {
+            {1,"AUTOPILOT AVAILABLE,Bool" },
+            {2,"GPS APPROACH MODE,Enum" },
+            {3,"BRAKE PARKING POSITION,Position" },
+            {4,"GENERAL ENG THROTTLE LEVER POSITION ,number" },
+            {5,"AIRSPEED INDICATED,knots" },
+            {6,"AUTOTHROTTLE ACTIVE,boolean" },
+        };
+        Dictionary<int, string> was = new Dictionary<int, string>
+        {
             {1,"PLANE LONGITUDE,degree" },
             {2,"PLANE LATITUDE,degree" },
             {3,"PLANE HEADING DEGREES MAGNETIC,degree" },
             {4,"PLANE ALTITUDE,feet" },
             {5,"AIRSPEED INDICATED,knots" },
+            {6,"AUTOTHROTTLE ACTIVE,boolean" },
         };
-
         /// User-defined win32 event => put basically any number?
         public const int WM_USER_SIMCONNECT = 0x0402;
 
@@ -70,7 +79,7 @@ namespace MiniSimconnect
         public MainWindow()
         {
             InitializeComponent();
-
+            this.Topmost = true;
             // Starts our connection and poller
             var timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
@@ -80,9 +89,7 @@ namespace MiniSimconnect
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (sim == null) // We are not connected, let's try to connect
-                Connect();
-            else // We are connected, let's try to grab the data from the Sim
+            if (sim != null)
             {
                 try
                 {
@@ -103,7 +110,7 @@ namespace MiniSimconnect
         /// <param name="data"></param>
         private void Sim_OnRecvQuit(SimConnect sender, SIMCONNECT_RECV data)
         {
-            lblStatus.Content = "Disconnected";
+            this.Title = "Disconnected";
         }
 
         /// <summary>
@@ -114,7 +121,7 @@ namespace MiniSimconnect
         /// <param name="data"></param>
         private void Sim_OnRecvOpen(SimConnect sender, SIMCONNECT_RECV_OPEN data)
         {
-            lblStatus.Content = "Connected";
+            this.Title = "Connected";
 
             foreach (var toConnect in simConnectProperties)
             {
@@ -133,6 +140,8 @@ namespace MiniSimconnect
         /// </summary>
         private void Connect()
         {
+            if (sim != null)
+                return;
             /// The constructor is similar to SimConnect_Open in the native API
             try
             {
@@ -175,7 +184,7 @@ namespace MiniSimconnect
             {
                 sim.Dispose();
                 sim = null;
-                lblStatus.Content = "Disconnected";
+                this.Title = "Disconnected";
             }
         }
 
@@ -213,7 +222,7 @@ namespace MiniSimconnect
             var windowsSource = GetHWinSource();
             windowsSource.AddHook(WndProc);
 
-            Connect();
+          //  Connect();
         }
 
         /// <summary>
@@ -224,6 +233,20 @@ namespace MiniSimconnect
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             Disconnect();
+        }
+
+        private void btExit_Clicked(object sender, RoutedEventArgs e)
+        {
+            if (sim == null)
+                this.Close();
+            else
+                Disconnect();
+        }
+
+        private void btConnect_Clicked(object sender, RoutedEventArgs e)
+        {
+            if (sim == null)
+                Connect();
         }
     }
 }
