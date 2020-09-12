@@ -34,13 +34,14 @@ namespace MiniSimconnect
         /// </summary>
         Dictionary<int, string> simConnectProperties = new Dictionary<int, string>
         {
-            {1,"AUTOPILOT AVAILABLE,Bool" },
-            {2,"GPS APPROACH MODE,Enum" },
-            {3,"BRAKE PARKING POSITION,Position" },
-            {4,"GENERAL ENG THROTTLE LEVER POSITION ,number" },
+            {1,"AUTOPILOT MASTER,Bool" },
+            {2,"AUTOPILOT APPROACH HOLD,Bool" },
+            {3,"GENERAL ENG THROTTLE LEVER POSITION:index, Percent" },
+            {4,"BRAKE PARKING POSITION,Position" },
             {5,"AIRSPEED INDICATED,knots" },
             {6,"AUTOTHROTTLE ACTIVE,boolean" },
         };
+        // GENERAL ENG PCT MAX RPM ,number
         Dictionary<int, string> was = new Dictionary<int, string>
         {
             {1,"PLANE LONGITUDE,degree" },
@@ -86,7 +87,8 @@ namespace MiniSimconnect
             timer.Tick += Timer_Tick; ;
             timer.Start();
         }
-
+        DateTime takeOffTime;
+        TimeSpan ts;
         private void Timer_Tick(object sender, EventArgs e)
         {
             if (sim != null)
@@ -101,8 +103,17 @@ namespace MiniSimconnect
                     Disconnect();
                 }
             }
+            if (bTakeOff && bTimer)
+            {
+                ts = DateTime.Now - takeOffTime;
+                btAtOff.Content = ts.ToString();
+                if (ts.TotalSeconds > 100)
+                {
+                    btAtOff.Background = Brushes.Red;
+                }
+            }
         }
-
+        bool bTimer = true;
         /// <summary>
         /// We received a disconnection from SimConnect
         /// </summary>
@@ -135,10 +146,47 @@ namespace MiniSimconnect
             }
         }
 
-        /// <summary>
-        /// Try to connect to the Sim, and in case of success register the hooks
-        /// </summary>
-        private void Connect()
+        bool bActiveV4 = false;
+        FLT_STAGE fltStage = FLT_STAGE.none;
+
+        public enum FLT_STAGE
+        {
+            Start,
+            TaxiBeforeTakeOff,
+            TakeOff,  // first time over > 40 K
+            Climb,
+            Cruize,
+            Descent,
+            Approach,
+            Landed,  //   < 40 K
+            GoAround,
+            TaxiAfterLanding,
+            Parked,
+            none
+        }
+        public FLT_STAGE ChangeFltState(FLT_STAGE newState)
+        {
+            DisplayState(newState);
+            if (newState == FLT_STAGE.Landed)
+            {
+                newState = FLT_STAGE.TaxiAfterLanding;
+            }
+            //
+            fltStage = newState;
+            DisplayState(newState);
+            //tbAtState.Text = newState.ToString();
+            return newState;
+        }
+
+        public void DisplayState(FLT_STAGE state)
+        {
+        }
+
+
+            /// <summary>
+            /// Try to connect to the Sim, and in case of success register the hooks
+            /// </summary>
+            private void Connect()
         {
             if (sim != null)
                 return;
@@ -162,14 +210,77 @@ namespace MiniSimconnect
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="data"></param>
+        //       {3,"GENERAL ENG THROTTLE LEVER POSITION ,number" },
+        //       {4,"BRAKE PARKING POSITION,Position" },
+        //       {5,"AIRSPEED INDICATED,knots" },
+        //       {6,"AUTOTHROTTLE ACTIVE,boolean" },
+
+        // ---------------------------------------------------------------------
+        bool bTakeOff = false;
+        bool bLanded = false;
+        bool Vrotate = false;
         private void Sim_OnRecvSimobjectDataBytype(SimConnect sender, SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE data)
         {
             int iRequest = (int)data.dwRequestID;
             double dValue = (double)data.dwData[0];
-
+            if (iRequest == 5)
+            {
+                int speed = Convert.ToInt32(dValue);
+                btSpeed.Content = speed.ToString();
+                if (!bTakeOff)
+                {
+                    if (speed > 40)
+                    {
+                        bTakeOff = true;
+                        bTimer = true;
+                        takeOffTime = DateTime.Now.AddSeconds(-5);
+                    }                    
+                }
+                if (!Vrotate && speed > 140)
+                {
+                    Vrotate = true;
+                    btSpeed.Background = Brushes.Green;
+                }
+                else if (bTakeOff && speed < 35)
+                    bLanded = true;
+                if (bLanded)
+                {
+                    if (speed > 28)
+                        btSpeed.Background = Brushes.Red;
+                    else if (speed > 20)
+                        btSpeed.Background = Brushes.LightCoral;
+                    else if (speed > 2)
+                    {
+                        btSpeed.Background = Brushes.LightGreen;
+                    }
+                    else
+                    {
+                        btSpeed.Background = Brushes.LightGray;
+                        btSpeed.Content = "0";
+                    }
+                }
+            }
+            else if (iRequest == 6)
+            {
+                if (dValue == 1)
+                    btAutoThrust.Background = Brushes.Red;
+                else
+                    btAutoThrust.Background = Brushes.LightGray;
+            }
+            else if (iRequest == 4)
+            {
+                if (dValue == 1)
+                    btBrake.Background = Brushes.Red;
+                else
+                    btBrake.Background = Brushes.LightGray;
+            }
+            else if (iRequest== 3)
+            {
+                btAutoThrust.Content = dValue.ToString();
+            }
             GetLabelForUid(iRequest).Content = dValue.ToString();
         }
-
+//-----------------------------------------------------------------------------
         public void ReceiveSimConnectMessage()
         {
             sim?.ReceiveMessage();
@@ -240,7 +351,10 @@ namespace MiniSimconnect
             if (sim == null)
                 this.Close();
             else
+            {
                 Disconnect();
+                btDisconnect.Content = "Exit";
+            }
         }
 
         private void btConnect_Clicked(object sender, RoutedEventArgs e)
@@ -248,5 +362,12 @@ namespace MiniSimconnect
             if (sim == null)
                 Connect();
         }
+
+        private void btSpeedReset(object sender, RoutedEventArgs e)
+        {
+            btSpeed.Background = Brushes.LightGray;
+            btAtOff.Background = Brushes.LightGray;
+            bTimer = false;
+        }        
     }
 }
